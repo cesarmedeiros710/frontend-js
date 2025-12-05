@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mensagens Recebidas</title>
+
+    <link rel="stylesheet" href="css/default.css">
+
+
+    <script src="js/jquery-3.6.4.min.js"></script>
+    <script src="js/api.js"></script>
+
+</head>
+
+<body>
+<div class="page">
+      <nav>
+        <ul class="navmenu">
+          <li><a href="index.html" class="accent">Página inicial</a></li>
+        </ul>
+      </nav>
+    <header>
+        <h1>Mensagens Recebidas</h1>
+    </header>
+
+    <main>
+        <table id="tabelaMensagens">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>E-mail</th>
+                    <th>Mensagem</th>
+                    <th>Ações</th>
+        
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </main>
+
+</div>
+
+<script>
+    function carregarMensagens() {
+        var mensagensAPI = obterMensagens();
+
+        var mensagensLocal = JSON.parse(localStorage.getItem("mensagens")) || [];
+
+        mensagensAPI.forEach(msg => {
+            const existe = mensagensLocal.some(m => 
+                m.email === msg.email && m.mensagem === msg.mensagem
+            );
+
+            if (!existe) {
+                msg.visualizada = false; 
+                mensagensLocal.push(msg);
+            }
+        });
+
+        localStorage.setItem("mensagens", JSON.stringify(mensagensLocal));
+
+        mensagensLocal.sort((a, b) => new Date(b.data) - new Date(a.data));
+
+        preencherTabela(mensagensLocal);
+
+        marcarTodasComoVisualizadas(mensagensLocal);
+    }
+
+function preencherTabela(lista) {
+    const tbody = document.querySelector("#tabelaMensagens tbody");
+    tbody.innerHTML = "";
+
+    lista.forEach((msg, index) => {
+        const tr = document.createElement("tr");
+
+        if (msg.visualizada === false) {
+            tr.classList.add("nao-visualizada");
+        }
+
+        tr.innerHTML = `
+            <td>${msg.nome}</td>
+            <td>${msg.email}</td>
+            <td>${msg.mensagem}</td>
+            <td>
+                <button onclick="marcarComoVisualizada(${index})">Visualizar</button>
+                <button onclick="excluirMensagem(${index})">Excluir</button>
+            </td>
+        `;
+
+        tbody.appendChild(tr);
+    });
+}
+
+    function marcarTodasComoVisualizadas(lista) {
+        lista.forEach(msg => msg.visualizada = true);
+        localStorage.setItem("mensagens", JSON.stringify(lista));
+    }
+
+    carregarMensagens();
+
+function marcarView(index) {
+    if (!confirm("Marcar esta mensagem como visualizada?")) return;
+
+    let mensagens = JSON.parse(localStorage.getItem("mensagens")) || [];
+
+    mensagens[index].visualizada = true;
+
+    localStorage.setItem("mensagens", JSON.stringify(mensagens));
+
+    preencherTabela(mensagens);
+}
+
+function excluirMensagem(index) {
+    if (!confirm("Tem certeza que deseja excluir esta mensagem?")) return;
+
+    let mensagens = JSON.parse(localStorage.getItem("mensagens")) || [];
+
+    mensagens.splice(index, 1);
+
+    localStorage.setItem("mensagens", JSON.stringify(mensagens));
+
+    preencherTabela(mensagens);
+}
+</script>
+
+</body>
+</html>
